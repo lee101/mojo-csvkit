@@ -907,12 +907,25 @@ def decimal_parse(src: CPtr, n: Int, value: FPtr, meta: IPtr) -> Bool:
 
     while d_lo < d_hi and (src.unsafe_load(d_lo) == UInt8(48) or src.unsafe_load(d_lo) == UInt8(46)):
         d_lo += 1
-    while (
-        d_hi - 1 > d_lo
-        and (src.unsafe_load(d_hi - 1) == UInt8(48) or src.unsafe_load(d_hi - 1) == UInt8(46))
-    ):
-        d_hi -= 1
-        exponent += 1
+    # `Decimal.normalize()` drops trailing zero digits, not the point: strip a
+    # trailing '.' only when it is not followed by any digit (i.e. it is at the
+    # very end), because each stripped digit raises the exponent once and a
+    # stripped point does not correspond to a digit.
+    while d_hi - 1 > d_lo:
+        var tail = src.unsafe_load(d_hi - 1)
+        if tail == UInt8(46):
+            # A point with digits after it is interior ("1.5"); only a point
+            # at the end with nothing after it ("1.") may be dropped, and that
+            # costs no exponent.
+            if d_hi == digits_end:
+                d_hi -= 1
+            else:
+                break
+        elif tail == UInt8(48):
+            d_hi -= 1
+            exponent += 1
+        else:
+            break
 
     # Accumulate up to 19 significant digits exactly; past that the remaining
     # digits only move the exponent.

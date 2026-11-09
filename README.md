@@ -151,28 +151,28 @@ Measured with `pixi run bench` on the reference machine below, best of three
 iterations per case, both implementations given the same bytes and the same
 flags.
 
-Machine: Linux 6.8.0-142-generic, x86_64, Intel Xeon E5-2697 v4 @ 2.30 GHz,
-CPython 3.13.14, Mojo 1.2.0.dev2026092605, csvkit 2.2.0.
+Machine: Linux 6.8.0-147-generic, x86_64, Intel Xeon E5-2697 v4 @ 2.30 GHz,
+CPython 3.13.14, Mojo 1.2.0.dev2026092905, csvkit 2.2.0.
 
 | case | mojo-csvkit | csvkit | ratio | |
 | --- | --- | --- | --- | --- |
-| csvcut -c 1,3,5 (100k x 10) | 3992.4ms | 360.8ms | 0.09x | slower |
-| csvgrep -c 2 -m 42 (100k x 10) | 284.3ms | 228.9ms | 0.81x | slower |
-| csvsort -c 3 (100k x 10) | 7283.2ms | 8495.0ms | 1.17x | faster |
-| csvsort -c 3 -r (100k x 10) | 7048.2ms | 8509.4ms | 1.21x | faster |
-| csvstat --csv (100k x 10) | 12032.2ms | 20940.6ms | 1.74x | faster |
-| csvstat --mean (100k x 10) | 3781.5ms | 7999.3ms | 2.12x | faster |
-| csvstat --median (100k x 10) | 4256.8ms | 8598.1ms | 2.02x | faster |
-| csvstat --stdev (100k x 10) | 3824.7ms | 9154.7ms | 2.39x | faster |
-| csvstat --freq (100k x 10) | 10553.6ms | 7843.0ms | 0.74x | slower |
-| csvstat --csv (20k x 60) | 10763.2ms | 25550.9ms | 2.37x | faster |
-| csvformat -T (100k x 10) | 5015.9ms | 587.4ms | 0.12x | slower |
-| csvformat -U 1 (100k x 10) | 4915.9ms | 616.1ms | 0.13x | slower |
-| csvstack (2 x 50k x 6) | 5670.9ms | 977.7ms | 0.17x | slower |
+| csvcut -c 1,3,5 (100k x 10) | 2825.4ms | 288.1ms | 0.10x | slower |
+| csvgrep -c 2 -m 42 (100k x 10) | 219.1ms | 177.3ms | 0.81x | slower |
+| csvsort -c 3 (100k x 10) | 5128.8ms | 5931.7ms | 1.16x | faster |
+| csvsort -c 3 -r (100k x 10) | 5148.3ms | 5769.8ms | 1.12x | faster |
+| csvstat --csv (100k x 10) | 8151.3ms | 13027.6ms | 1.60x | faster |
+| csvstat --mean (100k x 10) | 2813.5ms | 5526.6ms | 1.96x | faster |
+| csvstat --median (100k x 10) | 2865.5ms | 5903.2ms | 2.06x | faster |
+| csvstat --stdev (100k x 10) | 2807.2ms | 6274.6ms | 2.24x | faster |
+| csvstat --freq (100k x 10) | 8108.1ms | 5561.5ms | 0.69x | slower |
+| csvstat --csv (20k x 60) | 10122.6ms | 14273.5ms | 1.41x | faster |
+| csvformat -T (100k x 10) | 3458.1ms | 431.7ms | 0.12x | slower |
+| csvformat -U 1 (100k x 10) | 3404.0ms | 441.1ms | 0.13x | slower |
+| csvstack (2 x 50k x 6) | 3961.1ms | 697.8ms | 0.18x | slower |
 
 Read this honestly: the win is in the numeric passes -- type inference and the
-aggregations, where csvstat is 1.7x to 2.4x faster, and the sort, which is
-1.2x faster. The losses are real and are structural rather than a tuning
+aggregations, where csvstat is 1.4x to 2.2x faster, and the sort, which is
+1.1x faster. The losses are real and are structural rather than a tuning
 miss. csvcut, csvformat and csvstack are dominated by materialising a Python
 `str` per cell: upstream writes into `csv.writer` with values the caller already
 has as strings, while this port has to decode a cell out of the arena before it
